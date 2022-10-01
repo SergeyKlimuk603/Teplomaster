@@ -1,14 +1,22 @@
-public with sharing class BatchForTest implements Database.Batchable<SObject>, Database.Stateful {
+public with sharing class BatchForTest implements Database.Batchable<SObject>, Database.Stateful, Schedulable {
 
     Integer chunkNumber = 0;
     Integer val;
     Integer chunkDelay;
     Integer startDelay;
 
+    public BatchForTest () {
+    }
+
     public BatchForTest (Integer val, Integer startDelay, Integer chunkDelay) {
         this.val = val;
         this.startDelay = startDelay;
         this.chunkDelay = chunkDelay;
+    }
+
+    //Schedulable
+    public void execute(SchedulableContext schedulableContext) {
+        Database.executeBatch(new BatchForTest());
     }
     
     public void execute(Database.BatchableContext param1, List<TestObject__c> testObjects) {
