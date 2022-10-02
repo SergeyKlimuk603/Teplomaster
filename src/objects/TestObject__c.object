@@ -163,6 +163,16 @@
         <type>Checkbox</type>
     </fields>
     <fields>
+        <fullName>IsLastUpdateSuccessful__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>Было ли последнее обновление записи успешным?</description>
+        <externalId>false</externalId>
+        <label>IsLastUpdateSuccessful</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
         <fullName>NumberField__c</fullName>
         <externalId>false</externalId>
         <label>NumberField</label>

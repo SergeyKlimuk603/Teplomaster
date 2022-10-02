@@ -29,9 +29,7 @@ public with sharing class BatchForTest implements Database.Batchable<SObject>, D
         System.debug('-----testObjects.size(): ' + testObjects.size());
          Integer cpuLimit = chunkDelay;
 
-        while (cpuLimit>Limits.getCpuTime()){
-            SObjectType test = Schema.getGlobalDescribe().get('Lead');
-        }
+        delay(chunkDelay);
         
         for(TestObject__c testObject : testObjects) {
             System.debug('-----testObject: ' + testObject);
@@ -62,13 +60,17 @@ public with sharing class BatchForTest implements Database.Batchable<SObject>, D
         Integer cpuLimit = startDelay;
 
         System.debug('-----before delay');
-        
-        while (cpuLimit>Limits.getCpuTime()){
-            SObjectType test = Schema.getGlobalDescribe().get('Lead');
-        }
+
+        delay(startDelay);
         
         System.debug('-----queryLocator: ' + queryLocator);
         
         return queryLocator;
+    }
+
+    private void delay(Integer delayTime) {
+        while (delayTime > Limits.getCpuTime()){
+            SObjectType test = Schema.getGlobalDescribe().get('Lead');
+        }
     }
 }

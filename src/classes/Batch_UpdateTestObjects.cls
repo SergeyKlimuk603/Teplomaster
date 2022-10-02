@@ -11,24 +11,12 @@ public with sharing class Batch_UpdateTestObjects implements Database.Batchable<
             'WHERE CheckboxField__c = TRUE';
 
     private Integer numOfSuccessfulRecords = 0;
-    private Integer startDelay;
-    private Integer chunkDelay;
-
 
     //Constructors
     public Batch_UpdateTestObjects() {}
 
     public Batch_UpdateTestObjects(String query) {
         this.query = query;
-    }
-
-    public Batch_UpdateTestObjects(Integer startDelay, Integer chunkDelay) {
-        setDelayTimes(startDelay, chunkDelay);
-    }
-
-    public Batch_UpdateTestObjects(String query, Integer startDelay, Integer chunkDelay) {
-        this(query);
-        setDelayTimes(startDelay, chunkDelay);
     }
 
     //Schedulable
@@ -40,32 +28,17 @@ public with sharing class Batch_UpdateTestObjects implements Database.Batchable<
     public Database.QueryLocator start(Database.BatchableContext batchableContext) {
         Database.QueryLocator queryLocator = Database.getQueryLocator(query);
 
-        delay(startDelay);
-
         return queryLocator;
     }
 
     public void execute(Database.BatchableContext batchableContext, List<TestObject__c> testObjects) {
-        System.debug('-----testObjects.size(): ' + testObjects.size());
-        for(TestObject__c testObject : testObjects) {
-            System.debug('-----testObject: ' + testObject);
-        }
-        List<TestObject__c> testObjectsForUpdate = updateTestObjects(testObjects);
+        List<TestObject__c> testObjectsForUpdate = handleTestObjects(testObjects);
 
-        delay(chunkDelay);
+        List<Database.SaveResult> saveResults = Database.update(testObjectsForUpdate, false);
 
+        List<TestObjectUpdatedEvent__e> testObjectUpdatedEvents = getEventsBySaveResults(saveResults);
 
-
-        List<Database.SaveResult> results = Database.update(testObjectsForUpdate, false);
-        List<Id> successUpdateRecords = new List<Id>();
-        List<Id> failedUpdateRecords = new List<Id>();
-        for (Database.SaveResult result : results) {
-            System.debug('-----result: ' + result);
-            Id recordId = result.getId();
-            result.isSuccess() ? successUpdateRecords.add(recordId) : failedUpdateRecords.add(recordId);
-        }
-        //System.debug('-----results: ' + results);
-        numOfSuccessfulRecords += results.size();
+        EventBus.publish(testObjectUpdatedEvents);
     }
 
     public void finish(Database.BatchableContext batchableContext) {
@@ -75,37 +48,49 @@ public with sharing class Batch_UpdateTestObjects implements Database.Batchable<
             return;
         }
 
-//        System.scheduleBatch(
-//                new Batch_UpdateTestObjects(query),
-//                Batch_UpdateTestObjects.class.getName(),
-//                START_NEW_BATCH_PERIOD
-//        );
+        System.scheduleBatch(
+                new Batch_UpdateTestObjects(query),
+                Batch_UpdateTestObjects.class.getName(),
+                START_NEW_BATCH_PERIOD
+        );
     }
 
     //Others
-    private List<TestObject__c> updateTestObjects(List<TestObject__c> testObjects) {
-        //List<TestObject__c> testObjectsForUpdate = new List<TestObject__c>();
-
+    private List<TestObject__c> handleTestObjects(List<TestObject__c> testObjects) {
         for (TestObject__c testObject : testObjects) {
             testObject.CheckboxField__c = false;
             testObject.TextField__c = 'Checkbox was changed';
-            if(testObject.Name == 'Batch_UpdateTestObjects_30') {
-                testObject.TextField__c = '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
-            }
+            createFailedRecords(testObject);
         }
 
         return testObjects;
     }
 
-    private void delay(Integer delayTime) {
-        while (delayTime > Limits.getCpuTime()){
-            SObjectType test = Schema.getGlobalDescribe().get('Lead');
+    private void createFailedRecords(TestObject__c testObject) {
+        Decimal rand = Math.random() * 2;
+        if (rand > 1) {
+            System.debug('-----failed testObject: ' + testObject.Id);
+            testObject.TextField__c = '00000000000000000000000000000000000000000000000000000000000000000000000000000' +
+                    '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' +
+                    '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
         }
     }
 
-    private void setDelayTimes(Integer startDelay, Integer chunkDelay) {
-        this.startDelay = startDelay * 1000;
-        this.chunkDelay = chunkDelay * 1000;
-    }
+    private List<TestObjectUpdatedEvent__e> getEventsBySaveResults(List<Database.SaveResult> saveResults) {
+        List<TestObjectUpdatedEvent__e> testObjectUpdatedEvents = new List<TestObjectUpdatedEvent__e>();
+        for (Database.SaveResult saveResult : saveResults) {
+            if (saveResult.isSuccess()) {
+                numOfSuccessfulRecords++;
+            }
 
+            testObjectUpdatedEvents.add(
+                    new TestObjectUpdatedEvent__e(
+                            TestObjectId__c = saveResult.getId(),
+                            IsSuccessfulUpdate__c = saveResult.isSuccess()
+                    )
+            );
+        }
+
+        return testObjectUpdatedEvents;
+    }
 }

@@ -3,25 +3,27 @@
     <deploymentStatus>Deployed</deploymentStatus>
     <eventType>HighVolume</eventType>
     <fields>
-        <fullName>IsSuccessfullUpdate__c</fullName>
+        <fullName>IsSuccessfulUpdate__c</fullName>
         <defaultValue>false</defaultValue>
         <externalId>false</externalId>
         <isFilteringDisabled>false</isFilteringDisabled>
         <isNameField>false</isNameField>
         <isSortingDisabled>false</isSortingDisabled>
-        <label>IsSuccessfullUpdate</label>
+        <label>IsSuccessfulUpdate</label>
         <type>Checkbox</type>
     </fields>
     <fields>
-        <fullName>RecordsIds__c</fullName>
+        <fullName>TestObjectId__c</fullName>
+        <description>Поле содержащее Id записи, для которой запущен Event.</description>
         <externalId>false</externalId>
         <isFilteringDisabled>false</isFilteringDisabled>
         <isNameField>false</isNameField>
         <isSortingDisabled>false</isSortingDisabled>
-        <label>RecordsIds</label>
-        <length>18000</length>
-        <type>LongTextArea</type>
-        <visibleLines>3</visibleLines>
+        <label>TestObjectId</label>
+        <length>18</length>
+        <required>false</required>
+        <type>Text</type>
+        <unique>false</unique>
     </fields>
     <label>TestObjectUpdatedEvent</label>
     <pluralLabel>TestObjectUpdatedEvents</pluralLabel>
