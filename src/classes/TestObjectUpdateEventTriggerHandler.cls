@@ -9,6 +9,7 @@ public with sharing class TestObjectUpdateEventTriggerHandler extends TriggerHan
         } catch (Exception ex) {
             retryEvent();
         }
+        //
     }
 
     private List<TestObject__c> createTestObjectsForUpdate(List<TestObjectUpdatedEvent__e> newList) {
